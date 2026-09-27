@@ -190,7 +190,7 @@ out whatever text/link/data is encoded inside it.
 To get the latest version after changes are pushed:
 
 ```bash
-cd QRINEX
+cd QRINUX
 git pull
 ```
 
