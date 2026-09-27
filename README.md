@@ -1,4 +1,4 @@
-# QRINUX
+# QRINUX TOPIC
 ![QRINUX - The QR Generator](assets/Qrinux.png)
 A simple but advanced QR code with a beginner-friendly
 guided menu, multiple QR types, batch generation, history tracking, and a built-in
