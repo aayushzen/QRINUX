@@ -19,7 +19,7 @@ pkg update -y && pkg upgrade -y
 pkg install -y python git python-pillow libjpeg-turbo libpng freetype build-essential
 termux-setup-storage
 rm -rf ~/QRINUX
-git clone https://github.com/aayushzen/QRINEX.git ~/QRINUX
+git clone https://github.com/aayushzen/QRINUX.git ~/QRINUX
 cd ~/QRINUX
 pip install --no-cache-dir qrcode
 python qrinux.py
@@ -33,9 +33,10 @@ python qrinux.py
 ```bash
 sudo apt update
 sudo apt install -y python3 python3-pip git
-git clone https://github.com/aayushzen/QRINUX.git
-cd QRINUX
-pip3 install --no-cache-dir "qrcode[pil]" pillow
+rm -rf ~/QRINUX
+git clone https://github.com/aayushzen/QRINUX.git ~/QRINUX
+cd ~/QRINUX
+pip3 install --no-cache-dir --break-system-packages "qrcode[pil]" pillow
 python3 qrinux.py
 ```
 
@@ -43,9 +44,10 @@ python3 qrinux.py
 
 ```bash
 brew install python git
-git clone https://github.com/aayushzen/QRINUX.git
-cd QRINUX
-pip3 install --no-cache-dir "qrcode[pil]" pillow
+rm -rf ~/QRINUX
+git clone https://github.com/aayushzen/QRINUX.git ~/QRINUX
+cd ~/QRINUX
+pip3 install --no-cache-dir --break-system-packages "qrcode[pil]" pillow
 python3 qrinux.py
 ```
 
