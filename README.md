@@ -16,10 +16,9 @@ Repo: https://github.com/aayushzen/QRINUX-QR
 
 ```bash
 pkg update -y && pkg upgrade -y
-pkg install -y python git python-pillow libjpeg-turbo libpng freetype build-essential
-termux-setup-storage
-rm -rf ~/QRINUX
-git clone https://github.com/aayushzen/QRINUX-QR.git ~/QRINUX
+pkg install -y python git python-pillow
+[ -d ~/storage ] || termux-setup-storage
+if [ -d ~/QRINUX/.git ]; then git -C ~/QRINUX pull; else [ -e ~/QRINUX ] && mv ~/QRINUX ~/QRINUX.old.$(date +%s); git clone https://github.com/aayushzen/QRINUX-QR.git ~/QRINUX; fi
 cd ~/QRINUX
 pip install --no-cache-dir qrcode
 python qrinux.py
@@ -31,24 +30,23 @@ python qrinux.py
 ## <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Tux.svg" width="28" height="28"> Linux (Ubuntu / Debian / Kali / etc.)
 
 ```bash
-sudo apt update
-sudo apt install -y python3 python3-pip git
-rm -rf ~/QRINUX
-git clone https://github.com/aayushzen/QRINUX-QR.git ~/QRINUX
+sudo apt update && sudo apt install -y python3 python3-pip python3-venv python3-pil git
+if [ -d ~/QRINUX/.git ]; then git -C ~/QRINUX pull; else [ -e ~/QRINUX ] && mv ~/QRINUX ~/QRINUX.old.$(date +%s); git clone https://github.com/aayushzen/QRINUX-QR.git ~/QRINUX; fi
 cd ~/QRINUX
-pip3 install --no-cache-dir --break-system-packages "qrcode[pil]" pillow
-python3 qrinux.py
+python3 -m venv --system-site-packages .venv
+.venv/bin/pip install --no-cache-dir qrcode
+.venv/bin/python qrinux.py
 ```
 
 ## <img src="https://commons.wikimedia.org/wiki/Special:Redirect/file/Apple_logo_black.svg" width="28" height="28"> macOS
 
 ```bash
 brew install python git
-rm -rf ~/QRINUX
-git clone https://github.com/aayushzen/QRINUX-QR.git ~/QRINUX
+if [ -d ~/QRINUX/.git ]; then git -C ~/QRINUX pull; else [ -e ~/QRINUX ] && mv ~/QRINUX ~/QRINUX.old.$(date +%s); git clone https://github.com/aayushzen/QRINUX-QR.git ~/QRINUX; fi
 cd ~/QRINUX
-pip3 install --no-cache-dir --break-system-packages "qrcode[pil]" pillow
-python3 qrinux.py
+python3 -m venv .venv
+.venv/bin/pip install --no-cache-dir qrcode pillow
+.venv/bin/python qrinux.py
 ```
 
 ### Optional: enable the built-in QR reader (`[r]` in the menu)
