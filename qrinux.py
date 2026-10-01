@@ -110,24 +110,28 @@ def clear():
 
 
 def banner():
-    # Full-width responsive banner: the outer box always matches the terminal width.
+    # Keep the box full-width and let the QRINUX text use almost all of it.
     clear()
+
     cols = max(20, shutil.get_terminal_size(fallback=(80, 24)).columns)
     inner_width = cols - 2
 
-    fit = None
-    for cell, gap in (("██", "  "), ("█", " ")):
-        lines = big_text_lines("QRINUX", cell=cell, gap=gap)
-        if max(len(line) for line in lines) <= inner_width:
-            fit = lines
-            break
+    # Two terminal cells per block gives a bold, readable logo on Termux.
+    # A little extra spacing makes the word look wider without overflowing.
+    gap = "   " if inner_width >= 78 else "  "
+    lines = big_text_lines("QRINUX", cell="██", gap=gap)
+
+    # Very small terminals may not have enough room for the big logo.
+    if max(len(line) for line in lines) > inner_width:
+        lines = big_text_lines("QRINUX", cell="█", gap=" ")
 
     print(TITLE + BOLD + "╔" + "═" * inner_width + "╗" + RESET)
-    if fit:
-        for line in fit:
-            print(TITLE + BOLD + "║" + RESET + line.center(inner_width) + TITLE + BOLD + "║" + RESET)
-    else:
-        print(TITLE + BOLD + "║" + RESET + "QRINUX".center(inner_width) + TITLE + BOLD + "║" + RESET)
+    for line in lines:
+        print(
+            TITLE + BOLD + "║" + RESET
+            + line.center(inner_width)
+            + TITLE + BOLD + "║" + RESET
+        )
     print(TITLE + BOLD + "╚" + "═" * inner_width + "╝" + RESET)
     print(CREDIT + BOLD + "<----- Created By zen Aayush ----->".center(cols) + RESET)
     print()
