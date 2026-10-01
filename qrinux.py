@@ -81,55 +81,97 @@ HISTORY_FILE = SAVE_DIR / "history.json"
 
 
 # ---------------------------------------------------------------------------
-# Big block-letter banner (hand-drawn 5x7 bitmap font, rendered as solid blocks)
+# Big block-letter banner
+# Every glyph uses the exact same 7x7 grid.  The renderer uses one terminal
+# block per grid cell so the banner stays compact and does not wrap on phones.
 # ---------------------------------------------------------------------------
 _FONT = {
-    # 7x7 block font: the strokes are intentionally kept consistent
-    # so rounded, straight and diagonal letters have similar visual weight.
-    "Q": ["0111110", "1100011", "1100011", "1100011", "1101011", "1100111", "0111111"],
-    "R": ["1111110", "1100011", "1100011", "1111110", "1111000", "1101100", "1100110"],
-    "I": ["1111111", "0011100", "0011100", "0011100", "0011100", "0011100", "1111111"],
-    "N": ["1100011", "1110011", "1111011", "1111111", "1101111", "1100111", "1100011"],
-    "U": ["1100011", "1100011", "1100011", "1100011", "1100011", "1110111", "0111110"],
-    "X": ["1100011", "1100011", "0110110", "0011100", "0110110", "1100011", "1100011"],
-    " ": ["000", "000", "000", "000", "000", "000", "000"],
+    "Q": [
+        "1111110",
+        "1100011",
+        "1100011",
+        "1100011",
+        "1101011",
+        "1100111",
+        "0111111",
+    ],
+    "R": [
+        "1111110",
+        "1100011",
+        "1100011",
+        "1111110",
+        "1111000",
+        "1101100",
+        "1100111",
+    ],
+    "I": [
+        "1111111",
+        "0011100",
+        "0011100",
+        "0011100",
+        "0011100",
+        "0011100",
+        "1111111",
+    ],
+    "N": [
+        "1100011",
+        "1110011",
+        "1111011",
+        "1111111",
+        "1101111",
+        "1100111",
+        "1100011",
+    ],
+    "U": [
+        "1100011",
+        "1100011",
+        "1100011",
+        "1100011",
+        "1100011",
+        "1111111",
+        "0111110",
+    ],
+    "X": [
+        "1100011",
+        "1110111",
+        "0111110",
+        "0011100",
+        "0111110",
+        "1110111",
+        "1100011",
+    ],
+    " ": [
+        "0000000",
+        "0000000",
+        "0000000",
+        "0000000",
+        "0000000",
+        "0000000",
+        "0000000",
+    ],
 }
 
 
-def big_text_lines(text, width):
-    """Render the logo so it fills the available box width."""
+def big_text_lines(text, cell="█", gap=" "):
+    """Render QRINUX from fixed 7x7 glyphs with no trailing padding."""
     text = text.upper()
+    rows = ["" for _ in range(7)]
 
-    # Build the normal 5x7 bitmap with one column between letters.
-    bitmap = [[] for _ in range(7)]
-    for index, ch in enumerate(text):
+    for char_index, ch in enumerate(text):
         pattern = _FONT.get(ch, _FONT[" "])
-        for row in range(7):
-            bitmap[row].extend(pattern[row])
-            if index < len(text) - 1:
-                bitmap[row].append("0")
 
-    logical_width = len(bitmap[0])
-    if width <= logical_width:
-        # Very narrow terminals: use one terminal cell per bitmap pixel.
-        return [
-            "".join("█" if bit == "1" else " " for bit in row[:width])
-            for row in bitmap
-        ]
+        for row_index in range(7):
+            rows[row_index] += "".join(
+                cell if bit == "1" else " "
+                for bit in pattern[row_index]
+            )
 
-    # Spread the 0/1 bitmap across the whole box. This keeps the logo
-    # centered and removes the unused left/right space.
-    base = width // logical_width
-    extra = width % logical_width
+            if char_index < len(text) - 1:
+                rows[row_index] += gap
 
-    rows = []
-    for row in bitmap:
-        out = []
-        for index, bit in enumerate(row):
-            cell_width = base + (1 if index < extra else 0)
-            out.append(("█" if bit == "1" else " ") * cell_width)
-        rows.append("".join(out))
-    return rows
+    # Keep every line exactly the same width.
+    width = max(len(row) for row in rows)
+    return [row.ljust(width) for row in rows]
 
 
 def clear():
@@ -137,25 +179,41 @@ def clear():
 
 
 def banner():
+    """Draw a compact, fixed-grid banner that fits phone terminals."""
     clear()
+    cols = shutil.get_terminal_size(fallback=(80, 24)).columns
 
-    cols = max(20, shutil.get_terminal_size(fallback=(80, 24)).columns)
-    inner_width = cols - 2
+    # Start with a single block per 7x7 cell. This keeps every glyph the same
+    # width/height and avoids the old 2-character-wide banner wrapping.
+    lines = big_text_lines("QRINUX", cell="█", gap=" ")
+    content_width = max(len(line) for line in lines)
 
-    # Make QRINUX use the complete inside width of the box.
-    lines = big_text_lines("QRINUX", inner_width)
+    # Leave one blank column inside the frame when the terminal allows it.
+    inner_width = content_width
+    frame_width = inner_width + 2
 
-    print(TITLE + BOLD + "╔" + "═" * inner_width + "╗" + RESET)
-    for line in lines:
-        print(
-            TITLE + BOLD + "║" + RESET
-            + line
-            + TITLE + BOLD + "║" + RESET
-        )
-    print(TITLE + BOLD + "╚" + "═" * inner_width + "╝" + RESET)
-    print(CREDIT + BOLD + "<----- Created By zen Aayush ----->".center(cols) + RESET)
+    if frame_width > cols:
+        # Extremely narrow terminals: reduce inter-letter spacing first.
+        lines = big_text_lines("QRINUX", cell="█", gap="")
+        content_width = max(len(line) for line in lines)
+        inner_width = content_width
+        frame_width = inner_width + 2
+
+    if frame_width <= cols:
+        print(TITLE + BOLD + "╔" + "═" * inner_width + "╗" + RESET)
+        for line in lines:
+            # No centering: the text starts/ends exactly at the frame edges.
+            print(TITLE + BOLD + "║" + RESET + line + TITLE + BOLD + "║" + RESET)
+        print(TITLE + BOLD + "╚" + "═" * inner_width + "╝" + RESET)
+        credit_width = frame_width
+    else:
+        # Last-resort fallback for a terminal narrower than the logo itself.
+        compact = "QRINUX"
+        print(TITLE + BOLD + compact.center(cols) + RESET)
+        credit_width = cols
+
+    print(CREDIT + BOLD + "<----- Created By zen Aayush ----->".center(credit_width) + RESET)
     print()
-
 
 def ask(prompt, default=None, color=CYAN):
     suffix = f" {DIM}[default: {default}]{RESET}" if default is not None else ""
