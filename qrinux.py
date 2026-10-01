@@ -94,14 +94,39 @@ _FONT = {
 }
 
 
-def big_text_lines(text, cell="██", gap="  "):
+def big_text_lines(text, width):
+    """Render the logo so it fills the available box width."""
     text = text.upper()
-    rows = ["" for _ in range(7)]
-    for ch in text:
+
+    # Build the normal 5x7 bitmap with one column between letters.
+    bitmap = [[] for _ in range(7)]
+    for index, ch in enumerate(text):
         pattern = _FONT.get(ch, _FONT[" "])
-        for i in range(7):
-            rows[i] += "".join(cell if bit == "1" else " " * len(cell) for bit in pattern[i])
-            rows[i] += gap
+        for row in range(7):
+            bitmap[row].extend(pattern[row])
+            if index < len(text) - 1:
+                bitmap[row].append("0")
+
+    logical_width = len(bitmap[0])
+    if width <= logical_width:
+        # Very narrow terminals: use one terminal cell per bitmap pixel.
+        return [
+            "".join("█" if bit == "1" else " " for bit in row[:width])
+            for row in bitmap
+        ]
+
+    # Spread the 0/1 bitmap across the whole box. This keeps the logo
+    # centered and removes the unused left/right space.
+    base = width // logical_width
+    extra = width % logical_width
+
+    rows = []
+    for row in bitmap:
+        out = []
+        for index, bit in enumerate(row):
+            cell_width = base + (1 if index < extra else 0)
+            out.append(("█" if bit == "1" else " ") * cell_width)
+        rows.append("".join(out))
     return rows
 
 
@@ -110,26 +135,19 @@ def clear():
 
 
 def banner():
-    # Keep the box full-width and let the QRINUX text use almost all of it.
     clear()
 
     cols = max(20, shutil.get_terminal_size(fallback=(80, 24)).columns)
     inner_width = cols - 2
 
-    # Two terminal cells per block gives a bold, readable logo on Termux.
-    # A little extra spacing makes the word look wider without overflowing.
-    gap = "   " if inner_width >= 78 else "  "
-    lines = big_text_lines("QRINUX", cell="██", gap=gap)
-
-    # Very small terminals may not have enough room for the big logo.
-    if max(len(line) for line in lines) > inner_width:
-        lines = big_text_lines("QRINUX", cell="█", gap=" ")
+    # Make QRINUX use the complete inside width of the box.
+    lines = big_text_lines("QRINUX", inner_width)
 
     print(TITLE + BOLD + "╔" + "═" * inner_width + "╗" + RESET)
     for line in lines:
         print(
             TITLE + BOLD + "║" + RESET
-            + line.center(inner_width)
+            + line
             + TITLE + BOLD + "║" + RESET
         )
     print(TITLE + BOLD + "╚" + "═" * inner_width + "╝" + RESET)
